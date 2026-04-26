@@ -452,7 +452,7 @@ export default function App() {
                           onClick={() => setBrushColor(color.value)}
                           className={`w-9 h-9 rounded-full border-2 transition-all hover:scale-110 active:scale-90 ${brushColor === color.value ? 'border-primary ring-2 ring-primary/20 scale-110' : 'border-transparent'}`}
                           style={{ backgroundColor: color.value }}
-                          title={color.name}
+                          title={`اختيار اللون: ${color.name}`}
                         />
                       ))}
                     </div>
@@ -462,7 +462,7 @@ export default function App() {
                         onClick={undo}
                         disabled={historyIndex < 0}
                         className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${historyIndex >= 0 ? 'bg-natural-bg text-primary hover:bg-natural-muted' : 'text-natural-border opacity-50 cursor-not-allowed'}`}
-                        title="تراجع"
+                        title="تراجع عن الخطوة الأخيرة (Ctrl+Z)"
                       >
                         <RotateCcw size={18} className="scale-x-[-1]" />
                       </button>
@@ -470,7 +470,7 @@ export default function App() {
                         onClick={redo}
                         disabled={historyIndex >= drawingHistory.length - 1}
                         className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${historyIndex < drawingHistory.length - 1 ? 'bg-natural-bg text-primary hover:bg-natural-muted' : 'text-natural-border opacity-50 cursor-not-allowed'}`}
-                        title="إعادة"
+                        title="إعادة تطبيق الخطوة الملغاة (Ctrl+Y)"
                       >
                         <RotateCcw size={18} />
                       </button>
@@ -482,6 +482,7 @@ export default function App() {
                           key={size.value}
                           onClick={() => setBrushSize(size.value)}
                           className={`w-10 h-10 rounded-xl text-xs font-bold transition-all ${brushSize === size.value ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-natural-bg text-natural-light-text hover:bg-natural-muted'}`}
+                          title={`حجم الفرشاة: ${size.label}`}
                         >
                           {size.label}
                         </button>
@@ -500,7 +501,7 @@ export default function App() {
                         }
                       }}
                       className="px-6 py-3 bg-white shadow-sm rounded-full text-red-500 hover:bg-red-50 transition-all border border-natural-border active:scale-95 flex items-center gap-3 text-xs font-bold uppercase tracking-widest"
-                      title="مسح الكل"
+                      title="مسح لوحة الرسم بالكامل والبدء من جديد"
                     >
                       <Eraser size={18} />
                       مسح
@@ -579,10 +580,28 @@ export default function App() {
                         }
                       }}
                       className="px-6 py-3 bg-white shadow-sm rounded-full text-primary hover:bg-natural-muted transition-all border border-primary/30 active:scale-95 flex items-center gap-3 text-xs font-bold uppercase tracking-widest"
-                      title="طباعة الرسم"
+                      title="طباعة الرسم الحالي فقط في صفحة منفصلة"
                     >
                       <Printer size={18} />
                       طباعة الرسم
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        const canvas = document.getElementById('test-canvas') as HTMLCanvasElement;
+                        if (canvas) {
+                          const dataUrl = canvas.toDataURL('image/png');
+                          const link = document.createElement('a');
+                          link.download = `drawing-${childInfo.name || 'child'}-${new Date().getTime()}.png`;
+                          link.href = dataUrl;
+                          link.click();
+                        }
+                      }}
+                      className="px-6 py-3 bg-white shadow-sm rounded-full text-green-600 hover:bg-green-50 transition-all border border-green-200 active:scale-95 flex items-center gap-3 text-xs font-bold uppercase tracking-widest"
+                      title="حفظ الرسم كصورة PNG"
+                    >
+                      <Download size={18} />
+                      حفظ كصورة
                     </button>
                   </div>
 
@@ -722,7 +741,7 @@ export default function App() {
                 <div className="flex gap-6 mt-14 sticky bottom-0 bg-white pt-6 border-t border-natural-border">
                   <button onClick={handlePrev} className="flex-1 py-5 border-2 border-natural-border rounded-full font-bold text-xs uppercase tracking-widest">السابق</button>
                   <button onClick={handleNext} className="flex-[2] bg-primary text-white rounded-full font-bold text-xs uppercase tracking-widest hover:scale-[1.02] shadow-xl shadow-primary/30 flex items-center justify-center gap-3 transition-all">
-                    عرض النتائج النهائية
+                    بدء تدوين الملاحظات
                     <ChevronLeft size={18} />
                   </button>
                 </div>
@@ -830,41 +849,52 @@ export default function App() {
                         
                         <div className="grid grid-cols-1 gap-8">
                           <div className="p-8 bg-natural-muted rounded-[32px] border border-natural-border transition-all hover:shadow-md">
-                            <h5 className="font-serif font-bold text-primary text-lg mb-6 flex items-center gap-2">
-                              <TrendingUp size={20} />
-                              المقارنة البيانية (بالأشهر والدرجات)
+                            <h5 className="font-serif font-bold text-primary text-xl mb-8 flex items-center gap-3">
+                              <TrendingUp size={24} />
+                              تحليل العلاقة بين العمر الزمني والنضج العقلي
                             </h5>
-                            <div className="w-full h-[300px] mt-4">
+                            <div className="w-full h-[350px] mt-6">
                               <ResponsiveContainer width="100%" height="100%">
                                 <BarChart
                                   data={[
-                                    { name: 'العمر الزمني (شهر)', value: currentAge?.totalMonths || 0, color: '#7c7c72' },
-                                    { name: 'العمر العقلي (شهر)', value: (mentalAgeResult.years * 12 + mentalAgeResult.months), color: '#5A5A40' },
-                                    { name: 'الدرجة الخام (نقاط)', value: rawScore, color: '#d16a5a' }
+                                    { name: 'العمر الزمني', value: currentAge?.totalMonths || 0, unit: 'شهر', desc: 'العمر الفعلي للطفل' },
+                                    { name: 'العمر العقلي', value: (mentalAgeResult.years * 12 + mentalAgeResult.months), unit: 'شهر', desc: 'مستوى النضج الإدراكي' },
+                                    { name: 'الدرجة الخام', value: rawScore, unit: 'نقطة', desc: 'مجموع بنود الرسم' }
                                   ]}
-                                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                  margin={{ top: 20, right: 30, left: 40, bottom: 30 }}
                                 >
-                                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e2d8" />
+                                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e2d8" opacity={0.5} />
                                   <XAxis 
                                     dataKey="name" 
-                                    axisLine={false} 
+                                    axisLine={{ stroke: '#e2e2d8' }}
                                     tickLine={false} 
-                                    tick={{ fill: '#7c7c72', fontSize: 12, fontWeight: 'bold' }}
+                                    tick={{ fill: '#7c7c72', fontSize: 13, fontWeight: '600' }}
+                                    dy={10}
+                                    label={{ value: 'مؤشرات التقييم', position: 'insideBottom', offset: -20, fill: '#5A5A40', fontSize: 12, fontWeight: 'bold' }}
                                   />
                                   <YAxis 
-                                    axisLine={false} 
+                                    axisLine={{ stroke: '#e2e2d8' }}
                                     tickLine={false} 
-                                    tick={{ fill: '#7c7c72', fontSize: 10 }}
+                                    tick={{ fill: '#7c7c72', fontSize: 11 }}
+                                    label={{ value: 'القيمة (أشهر/نقاط)', angle: -90, position: 'insideLeft', offset: -20, fill: '#5A5A40', fontSize: 12, fontWeight: 'bold' }}
                                   />
                                   <Tooltip 
-                                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', direction: 'rtl' }}
-                                    cursor={{ fill: 'transparent' }}
+                                    contentStyle={{ 
+                                      borderRadius: '20px', 
+                                      border: '1px solid #e2e2d8', 
+                                      boxShadow: '0 20px 40px rgba(90,90,64,0.12)', 
+                                      direction: 'rtl',
+                                      padding: '12px'
+                                    }}
+                                    itemStyle={{ color: '#5A5A40', fontWeight: 'bold' }}
+                                    cursor={{ fill: '#f5f5f0', opacity: 0.5 }}
+                                    formatter={(value: any, name: any, props: any) => [`${value} ${props.payload.unit}`, props.payload.desc]}
                                   />
-                                  <Bar dataKey="value" radius={[10, 10, 0, 0]} barSize={50}>
+                                  <Bar dataKey="value" radius={[15, 15, 0, 0]} barSize={60}>
                                     {[
-                                      { color: '#7c7c72' },
-                                      { color: '#5A5A40' },
-                                      { color: '#d16a5a' }
+                                      { color: '#7c7c72' }, // Chronological
+                                      { color: '#5A5A40' }, // Mental
+                                      { color: '#d16a5a' }  // Raw Score
                                     ].map((entry, index) => (
                                       <Cell key={`cell-${index}`} fill={entry.color} />
                                     ))}
@@ -872,8 +902,22 @@ export default function App() {
                                 </BarChart>
                               </ResponsiveContainer>
                             </div>
-                            <p className="text-[10px] text-natural-light-text text-center mt-4 italic font-bold uppercase tracking-widest">
-                              مقارنة مرئية بين النضج البيولوجي والأداء العقلي
+                            <div className="flex justify-center gap-6 mt-8 flex-wrap">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-[#7c7c72]" />
+                                <span className="text-[10px] font-bold text-natural-light-text uppercase tracking-widest">العمر الزمني (بالأشهر)</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-[#5A5A40]" />
+                                <span className="text-[10px] font-bold text-primary uppercase tracking-widest">العمر العقلي (بالأشهر)</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-[#d16a5a]" />
+                                <span className="text-[10px] font-bold text-[#d16a5a] uppercase tracking-widest">الدرجة الخام (نقاط)</span>
+                              </div>
+                            </div>
+                            <p className="text-[10px] text-natural-light-text text-center mt-6 italic font-medium opacity-70">
+                              * تعبر الفجوة بين العمر الزمني والعقلي عن مدى التسارع أو التأخر في النضج الإدراكي للطفل
                             </p>
                           </div>
 
@@ -946,6 +990,9 @@ export default function App() {
 
       <footer className="max-w-5xl mx-auto px-6 py-16 text-center text-natural-light-text">
         <div className="w-12 h-1 bg-primary/20 mx-auto mb-8 rounded-full" />
+        <p className="text-sm font-bold text-natural-text mb-6">
+          إعداد وبرمجة: دكتور. أحمد حمدي عاشور الغول ـ دكتوراه في علم النفس التربوي وخبير مايكروسوفت لتكنولوجيا المعلومات
+        </p>
         <p className="text-[10px] font-bold uppercase tracking-[0.3em] mb-2">© {new Date().getFullYear()} مرسم للحلول الإبداعية والتقييم النفسي</p>
         <p className="text-[10px] uppercase opacity-60">Professional Grade Clinical Assessment Environment</p>
       </footer>
